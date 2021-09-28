@@ -7,6 +7,8 @@ import LaunchTest from "./Tests";
 
 function TryAddButtonType(type: ButtonType, sequence: ButtonType[]): ButtonType[] {
   const result = sequence.concat(type);
+  const resultButWithMultiplyOperator = sequence.concat(ButtonType.OperatorMultiply).concat(type);
+  const resultButWithReplacedLast = sequence.slice(0, -1).concat(type);
 
   const expressionType = GetButtonExpressionOperationType(type);
 
@@ -43,7 +45,6 @@ function TryAddButtonType(type: ButtonType, sequence: ButtonType[]): ButtonType[
   while (index >= 0 && expression[index] === '0')
     index--;
   const lastNonZeroSymbol = index >= 0 ? expression[index] : null;
-  const lastNonZeroByttonType = lastNonZeroSymbol ? GetButtonTypeByDigit(lastNonZeroSymbol) : null;
 
   const lastExpressionType = GetButtonExpressionOperationType(lastButtonType);
   
@@ -61,13 +62,12 @@ function TryAddButtonType(type: ButtonType, sequence: ButtonType[]): ButtonType[
         case ExpressionOperationType.DigitZero:
           return (
             lastNonZeroSymbol === null ? sequence : (
-            lastNonZeroSymbol === '.' ? result : (
-            lastNonZeroByttonType === null ? sequence : (
-            GetButtonExpressionOperationType(lastNonZeroByttonType) === ExpressionOperationType.DigitNonZero ? result : (
-              sequence
-            )))));
+            lastNonDigitButtonType === ButtonType.SymbolPoint ? result : (
+            GetButtonTypeByDigit(lastNonZeroSymbol) === null ? sequence : (
+              result
+            ))));
         case ExpressionOperationType.SymbolConst:
-          return sequence;
+          return resultButWithMultiplyOperator;
       }
     }
 
@@ -81,9 +81,14 @@ function TryAddButtonType(type: ButtonType, sequence: ButtonType[]): ButtonType[
         case ExpressionOperationType.SymbolBrackets:
           return lastSymbol === '(' ? result : sequence;
         case ExpressionOperationType.DigitZero:
-          return lastNonDigitButtonType === ButtonType.SymbolPoint ? result : sequence;
+          return (
+            lastNonZeroSymbol === null ? sequence : (
+            lastNonZeroSymbol === '.' ? result : (
+            GetButtonTypeByDigit(lastNonZeroSymbol) === null ? sequence : (
+              result
+          ))));
         case ExpressionOperationType.SymbolConst:
-          return sequence;
+          return resultButWithMultiplyOperator;
       }
     }
 
@@ -130,7 +135,7 @@ function TryAddButtonType(type: ButtonType, sequence: ButtonType[]): ButtonType[
           return type == ButtonType.OperatorMinus ? result : sequence;
         case ExpressionOperationType.MathOperation:
         case ExpressionOperationType.SymbolPoint:
-          return sequence;
+          return resultButWithReplacedLast;
       }
     }
 
@@ -141,11 +146,12 @@ function TryAddButtonType(type: ButtonType, sequence: ButtonType[]): ButtonType[
           return result;
         case ExpressionOperationType.SymbolBrackets:
           return lastSymbol === '(' ? result : sequence;
-        case ExpressionOperationType.SymbolPoint:
         case ExpressionOperationType.DigitZero:
         case ExpressionOperationType.DigitNonZero:
         case ExpressionOperationType.SymbolConst:
-          return sequence;
+          return resultButWithMultiplyOperator;
+        case ExpressionOperationType.SymbolPoint:
+          return resultButWithReplacedLast;
       }
     }
 
@@ -157,10 +163,11 @@ function TryAddButtonType(type: ButtonType, sequence: ButtonType[]): ButtonType[
         case ExpressionOperationType.SymbolBrackets:
           return lastSymbol === '(' ? result : sequence;
         case ExpressionOperationType.SymbolConst:
-        case ExpressionOperationType.SymbolPoint:
         case ExpressionOperationType.DigitZero:
         case ExpressionOperationType.DigitNonZero:
-          return sequence;
+          return resultButWithMultiplyOperator;
+        case ExpressionOperationType.SymbolPoint:
+          return resultButWithReplacedLast;
       }
     }
   }
